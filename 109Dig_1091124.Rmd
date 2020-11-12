@@ -1,0 +1,130 @@
+---
+title: "「109年度國營事業管線挖掘市區道路施工回填復舊考評」縣府說明簡報"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r base,echo=F,message=F,warning=F}
+library("dplyr")
+library("magrittr")
+library("data.table")
+library("RCurl")
+library("XML")
+library("httr")
+library(jsonlite)
+
+
+#### Get&Clean Data ####
+# 
+# ### 1
+# target.m<-as.Date("2017-01-01")
+# target.m2<-as.Date("2020-08-31")
+# dig = fromJSON(sprintf("http://roaddig.kinmen.gov.tw/KMDigAPI/api/OpenData/GetCaseList?sdate=%s&edate=%s",target.m,target.m2))
+# dig = dig$Data
+# dig = filter(dig,!grepl("T",EngUse))
+# dig$X = as.numeric(dig$X)
+# dig$Y = as.numeric(dig$Y)
+# 
+# dig = filter(dig,AllowStart!="")
+# dig$year = as.numeric(substr(dig$AllowStart,1,4))
+# 
+# caselist=c("2856","2858","3111","2930","2796","2772","2770","2921","2825","2765","2971","2964","2920","2932","2970","2916","2955","2792","2830","2914","2849","2933","2922","2923","2912","2848","2824","2919","2972","2885","2837")
+# 
+# caselist.selected = c("2837","2825","2930","2796")
+# 
+# casedone = read.csv(file("D:/_MyDocuments/GoogleDrive/工作/109營建署管挖考評/CaseID-done.csv",encoding="big5"),stringsAsFactors=F)
+# names(casedone) = c("CaseID","Done")
+# casedone$Done = as.Date(casedone$Done)
+# 
+# source("D:/_MyDocuments/Git/ReportAndOthers/t97w84.R")
+# 
+# dig$wgs84x = 0
+# dig$wgs84y = 0
+# for (i in 1:nrow(dig)) {
+#   
+#   Temp = t97w84(dig$X[i],dig$Y[i])
+#   
+#   dig$wgs84x[i] = Temp[1]
+#   dig$wgs84y[i] = Temp[2]
+#   
+#   
+# }
+# 
+# dig$caselist = F
+# dig$caseselected = F
+# for (i in 1:nrow(dig)) {
+#   
+#   if (dig$CaseID[i] %in% caselist) { dig$caselist[i] = T  }
+#   if (dig$CaseID[i] %in% caselist.selected) { dig$caseselected[i] = T  }
+#   
+# }
+# 
+# ### 2
+# 
+# digpurpose = c("用戶","表燈","用電","新設","接水","住宅","大樓","用戶接管")
+# dig$Purpose = 0
+# for (i in 1:nrow(dig)) {
+#   for (d in 1:length(digpurpose)) {
+#     
+#     dig$Purpose[i] = ifelse(grepl(digpurpose[d],dig$EngUse[i]),1,dig$Purpose[i])
+#     
+#   }
+# }
+# 
+# dig$EngType = ifelse(dig$Purpose==1,"家庭用戶申裝管線工程",dig$EngType)
+# 
+# load("D:/_MyDocuments/GoogleDrive/Data/dig/道路挖掘督導資料.RData")
+# 
+# dig$check = 0
+# 
+# for (i in 1:nrow(dig)) {
+#   
+#   if (dig$CaseID[i] %in% dig.check$道路挖掘案號) {
+#     dig$check[i] = length(dig.check$道路挖掘案號[dig.check$道路挖掘案號==dig$CaseID[i]])
+#   }
+#   
+# }
+# 
+# ### 3
+# 
+# eva.date = c("2019-09-01","2020-08-31")
+# 
+# eva.dig = filter(dig,AllowStop !="")
+# eva.dig = mutate(eva.dig,AllowStop = as.Date(AllowStop),SchedStop=as.Date(SchedStop))
+# 
+# eva.dig = filter(eva.dig,((AllowStop)>=as.Date(eva.date[1]))&((AllowStop+30)<=as.Date(eva.date[2]))) #,CaseStatus!="註銷申請", CaseStatus!="案件已撤銷",CaseStatus!="待補件"
+# 
+# eva.dig = arrange(eva.dig,PPName,desc(Area),desc(Length))
+
+#### Just Import Data ####
+
+#save(eva.dig,file = "109Dig_1091124Data.RData")
+#save(dig.check,file = "109Dig_1091124Data2.RData")
+load(file = "109Dig_1091124Data.RData")
+load(file = "109Dig_1091124Data2.RData")
+
+
+
+```
+
+## 讓資料說話
+
++ 資料來源：金門縣道路挖掘管理系統
++ 時間區間：完工介於108年9月1日至109年8月31日之間的道路挖掘許可案
+
+原始資料、分析程式碼及簡報等完全公開於 [GitHub](https://github.com/chiahuaw/109DigEvaluation)。
+
+# 簡報大綱
+
+
+
+## 金門縣道路挖掘環境簡介
+
++ 法令
+  + 金門縣市區道路管理規則
+  + 金門縣道路挖掘管理自治條例
+  + 金門縣道路挖掘施工維護管理要點
+  + 金門縣道路挖掘埋設管線工程督導實施要點
