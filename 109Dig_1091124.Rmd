@@ -15,6 +15,7 @@ library("RCurl")
 library("XML")
 library("httr")
 library(jsonlite)
+library(ggplot2)
 
 
 #### Get&Clean Data ####
@@ -106,25 +107,60 @@ library(jsonlite)
 load(file = "109Dig_1091124Data.RData")
 load(file = "109Dig_1091124Data2.RData")
 
-
+eva.dig$PPName = ifelse(eva.dig$PPName=="金門縣自來水廠生產供水課","金門縣自來水廠",eva.dig$PPName)
 
 ```
 
 ## 讓資料說話
 
 + 資料來源：金門縣道路挖掘管理系統
-+ 時間區間：完工介於108年9月1日至109年8月31日之間的道路挖掘許可案
++ 時間區間：完工時間介於108年9月1日至109年8月31日之間的道路挖掘許可案
 
-原始資料、分析程式碼及簡報等完全公開於 [GitHub](https://github.com/chiahuaw/109DigEvaluation)。
+原始資料、資料分析碼及簡報等完全公開於 [GitHub](https://github.com/chiahuaw/109DigEvaluation)。
 
-# 簡報大綱
+## 簡報大綱
+
++ 金門縣道路挖掘法令簡介
++ 道路挖掘概況
++ 各項關鍵指標
 
 
-
-## 金門縣道路挖掘環境簡介
+## 金門縣道路挖掘法令簡介
 
 + 法令
   + 金門縣市區道路管理規則
   + 金門縣道路挖掘管理自治條例
   + 金門縣道路挖掘施工維護管理要點
   + 金門縣道路挖掘埋設管線工程督導實施要點
+  
+## 金門縣道路挖掘法令簡介
+
+1. 道路挖掘復原由申挖單位進行。
+2. 瀝青混凝土路面復原寬度依路寬分類。路寬8公尺以上半路幅復原；路寬未達8公尺者為全路幅復原，但具行車分向線且挖掘範圍未逾車道界線者，得依實際挖掘之車道範圍復原之。
+3. 管線圖資更新作業規定於「金門縣道路挖掘管理自治條例」第13條及「金門縣道路挖掘施工維護管理要點」第17點。
+
+## 道路挖掘概況
+
+```{r 01,echo=F,message=F,warning=F}
+bg1 = ggplot(eva.dig,aes(x="",y=PPName,fill=PPName))+geom_bar(width=1,stat="identity")+coord_polar("y",start=0)
+
+bg1
+
+bg1.form = summarise(group_by(eva.dig,PPName),n=n(),ratio=round(n/nrow(eva.dig),4)*100) %>% data.frame()
+bg1.form = filter(bg1.form,grepl("中華電信",PPName)|grepl("電力",PPName)|grepl("自來水",PPName)|grepl("中油",PPName))
+
+```
+
+#### 台電公司金門區處：`r bg1.form$ratio[bg1.form$PPName=="台灣電力股份有限公司金門區營業處"]`% ； 自來水廠：`r bg1.form$ratio[bg1.form$PPName=="金門縣自來水廠"]`% 
+#### 中華電信公司：`r bg1.form$ratio[bg1.form$PPName=="中華電信公司金門營運處"]`% ；  台灣中油：`r bg1.form$ratio[bg1.form$PPName=="台灣中油股份有限公司高雄營業處"]`% → 合計 `r sum(bg1.form$ratio)`%
+
+## 道路挖掘概況
+
+```{r 02,echo=F,message=F,warning=F}
+
+dig.check = filter(dig.check,(督導日期>=as.Date("2019-09-01"))&(督導日期<=as.Date("2020-08-31")))
+
+check.kmeans = select(dig.check,A01,A02,A03,B01,B02,B03,B04,B05,C01,C02)
+check.kmeans = kmeans(check.kmeans,5)
+
+```

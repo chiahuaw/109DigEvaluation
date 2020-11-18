@@ -1,0 +1,245 @@
+---
+title: "「109年度國營事業管線挖掘市區道路施工回填復舊考評」金門縣政府資料"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r base,echo=F,message=F,warning=F}
+library("dplyr")
+library("magrittr")
+library("data.table")
+library("RCurl")
+library("XML")
+library("httr")
+library(jsonlite)
+library(ggplot2)
+library(knitr)
+
+eva.date = c("2019-09-01","2020-08-31")
+
+#### Get&Clean Data ####
+# 
+# ### 1
+target.m<-as.Date("2017-01-01")
+target.m2<-as.Date("2020-08-31")
+# dig = fromJSON(sprintf("http://roaddig.kinmen.gov.tw/KMDigAPI/api/OpenData/GetCaseList?sdate=%s&edate=%s",target.m,target.m2))
+# dig = dig$Data
+# dig = filter(dig,!grepl("T",EngUse))
+# dig$X = as.numeric(dig$X)
+# dig$Y = as.numeric(dig$Y)
+# 
+# dig = filter(dig,AllowStart!="")
+# dig$year = as.numeric(substr(dig$AllowStart,1,4))
+# 
+# caselist=c("2856","2858","3111","2930","2796","2772","2770","2921","2825","2765","2971","2964","2920","2932","2970","2916","2955","2792","2830","2914","2849","2933","2922","2923","2912","2848","2824","2919","2972","2885","2837")
+# 
+# caselist.selected = c("2837","2825","2930","2796")
+# 
+# casedone = read.csv(file("D:/_MyDocuments/GoogleDrive/工作/109營建署管挖考評/CaseID-done.csv",encoding="big5"),stringsAsFactors=F)
+# names(casedone) = c("CaseID","Done")
+# casedone$Done = as.Date(casedone$Done)
+# 
+# source("D:/_MyDocuments/Git/ReportAndOthers/t97w84.R")
+# 
+# dig$wgs84x = 0
+# dig$wgs84y = 0
+# for (i in 1:nrow(dig)) {
+#   
+#   Temp = t97w84(dig$X[i],dig$Y[i])
+#   
+#   dig$wgs84x[i] = Temp[1]
+#   dig$wgs84y[i] = Temp[2]
+#   
+#   
+# }
+# 
+# dig$caselist = F
+# dig$caseselected = F
+# for (i in 1:nrow(dig)) {
+#   
+#   if (dig$CaseID[i] %in% caselist) { dig$caselist[i] = T  }
+#   if (dig$CaseID[i] %in% caselist.selected) { dig$caseselected[i] = T  }
+#   
+# }
+# 
+# ### 2
+# 
+# digpurpose = c("用戶","表燈","用電","新設","接水","住宅","大樓","用戶接管")
+# dig$Purpose = 0
+# for (i in 1:nrow(dig)) {
+#   for (d in 1:length(digpurpose)) {
+#     
+#     dig$Purpose[i] = ifelse(grepl(digpurpose[d],dig$EngUse[i]),1,dig$Purpose[i])
+#     
+#   }
+# }
+# 
+# dig$EngType = ifelse(dig$Purpose==1,"家庭用戶申裝管線工程",dig$EngType)
+# 
+# load("D:/_MyDocuments/GoogleDrive/Data/dig/道路挖掘督導資料.RData")
+# 
+# dig$check = 0
+# 
+# for (i in 1:nrow(dig)) {
+#   
+#   if (dig$CaseID[i] %in% dig.check$道路挖掘案號) {
+#     dig$check[i] = length(dig.check$道路挖掘案號[dig.check$道路挖掘案號==dig$CaseID[i]])
+#   }
+#   
+# }
+# 
+# ### 3
+# 
+# 
+# 
+# eva.dig = filter(dig,AllowStop !="")
+# eva.dig = mutate(eva.dig,AllowStop = as.Date(AllowStop),SchedStop=as.Date(SchedStop))
+# 
+# eva.dig = filter(eva.dig,((AllowStop)>=as.Date(eva.date[1]))&((AllowStop+30)<=as.Date(eva.date[2]))) #,CaseStatus!="註銷申請", CaseStatus!="案件已撤銷",CaseStatus!="待補件"
+# 
+# eva.dig = arrange(eva.dig,PPName,desc(Area),desc(Length))
+
+#### Just Import Data ####
+
+#save(eva.dig,file = "109Dig_1091124Data.RData")
+#save(dig.check,file = "109Dig_1091124Data2.RData")
+load(file = "109Dig_1091124Data.RData")
+load(file = "109Dig_1091124Data2.RData")
+
+eva.dig$PPName = ifelse(eva.dig$PPName=="金門縣自來水廠生產供水課","金門縣自來水廠",eva.dig$PPName)
+
+```
+
+## 前言：讓資料說話
+
+為減低主觀認知偏差及爭議，以下報告以道路挖掘管理系統的資料進行分析及說明。
+
++ 資料來源：金門縣道路挖掘管理系統
++ 時間區間：完工時間介於108年9月1日至109年8月31日之間的道路挖掘許可案
+
+原始資料、資料分析碼及簡報等完全公開於 [GitHub](https://github.com/chiahuaw/109DigEvaluation)。
+
+## 金門縣道路挖掘法令簡介
+
++ 法令
+  + 金門縣市區道路管理規則
+  + 金門縣道路挖掘管理自治條例
+  + 金門縣道路挖掘施工維護管理要點
+  + 金門縣道路挖掘埋設管線工程督導實施要點
+  
+相關法令條文如附件，就復原部分依常見問題摘要如下：
+
+1. 道路挖掘復原由申挖單位進行。
+2. 瀝青混凝土路面復原寬度依路寬分類。路寬8公尺以上半路幅復原；路寬未達8公尺者為全路幅復原，但具行車分向線且挖掘範圍未逾車道界線者，得依實際挖掘之車道範圍復原。
+3. 管線圖資更新作業規定於「金門縣道路挖掘管理自治條例」第13條及「金門縣道路挖掘施工維護管理要點」第17點。
+
+## 道路挖掘概況
+
+金門縣道路挖掘單位計有管線機構及地方公所等，依申請單位比例圖示如下：
+
+```{r 01,echo=F,message=F,warning=F}
+bg1 = ggplot(eva.dig,aes(x="",y=PPName,fill=PPName))+geom_bar(width=1,stat="identity")+coord_polar("y",start=0)
+
+bg1
+
+bg1.form = summarise(group_by(eva.dig,PPName),n=n(),ratio=round(n/nrow(eva.dig),4)*100) %>% data.frame()
+bg1.form = filter(bg1.form,grepl("中華電信",PPName)|grepl("電力",PPName)|grepl("自來水",PPName)|grepl("中油",PPName))
+
+```
+
+本次考評之四單位合計佔本縣道路挖掘總量的 `r sum(bg1.form$ratio)`%，各別單位比例如下：
+
++ 台電公司金門區處：`r bg1.form$ratio[bg1.form$PPName=="台灣電力股份有限公司金門區營業處"]`% 
++ 自來水廠：`r bg1.form$ratio[bg1.form$PPName=="金門縣自來水廠"]`% 
++ 中華電信公司：`r bg1.form$ratio[bg1.form$PPName=="中華電信公司金門營運處"]`% 
++ 台灣中油：`r bg1.form$ratio[bg1.form$PPName=="台灣中油股份有限公司高雄營業處"]`% 
+
+## 道路挖掘督導
+
+```{r 02,echo=F,message=F,warning=F}
+
+dig.check = filter(dig.check,(督導日期>=eva.date[1])&(督導日期<=eva.date[2]))
+
+check.kmeans = select(dig.check,A01,A02,A03,B01,B02,B03,B04,B05,C01,C02) %>% 
+  mutate(.,A01=A01*3,A02=A02*3,A03=A03*3,C01=C01*0.5,C02=C02*0.5)
+check.kmeans = kmeans(check.kmeans,5)
+
+dig.check$kmeans = check.kmeans$cluster
+
+check.kmeans = as.data.frame(check.kmeans$centers)
+check.kmeans$k = c(1:5)
+check.kmeans$n = c(nrow(dig.check[dig.check$kmeans==1,]),nrow(dig.check[dig.check$kmeans==2,]),nrow(dig.check[dig.check$kmeans==3,]),nrow(dig.check[dig.check$kmeans==4,]),nrow(dig.check[dig.check$kmeans==5,]))
+
+check.kmeans$power = c(nrow(dig.check[(dig.check$kmeans==1)&(dig.check$受督導單位=="台灣電力股份有限公司金門區營業處"),]),
+                       nrow(dig.check[(dig.check$kmeans==2)&(dig.check$受督導單位=="台灣電力股份有限公司金門區營業處"),]),
+                       nrow(dig.check[(dig.check$kmeans==3)&(dig.check$受督導單位=="台灣電力股份有限公司金門區營業處"),]),
+                       nrow(dig.check[(dig.check$kmeans==4)&(dig.check$受督導單位=="台灣電力股份有限公司金門區營業處"),]),
+                       nrow(dig.check[(dig.check$kmeans==5)&(dig.check$受督導單位=="台灣電力股份有限公司金門區營業處"),]))
+
+check.kmeans$cht = c(nrow(dig.check[(dig.check$kmeans==1)&(dig.check$受督導單位=="中華電信金門營運處"),]),
+                     nrow(dig.check[(dig.check$kmeans==2)&(dig.check$受督導單位=="中華電信金門營運處"),]),
+                     nrow(dig.check[(dig.check$kmeans==3)&(dig.check$受督導單位=="中華電信金門營運處"),]),
+                     nrow(dig.check[(dig.check$kmeans==4)&(dig.check$受督導單位=="中華電信金門營運處"),]),
+                     nrow(dig.check[(dig.check$kmeans==5)&(dig.check$受督導單位=="中華電信金門營運處"),]))
+
+check.kmeans$water = c(nrow(dig.check[(dig.check$kmeans==1)&(dig.check$受督導單位=="金門縣自來水廠"),]),
+                       nrow(dig.check[(dig.check$kmeans==2)&(dig.check$受督導單位=="金門縣自來水廠"),]),
+                       nrow(dig.check[(dig.check$kmeans==3)&(dig.check$受督導單位=="金門縣自來水廠"),]),
+                       nrow(dig.check[(dig.check$kmeans==4)&(dig.check$受督導單位=="金門縣自來水廠"),]),
+                       nrow(dig.check[(dig.check$kmeans==5)&(dig.check$受督導單位=="金門縣自來水廠"),]))
+
+check.kmeans$oil = c(nrow(dig.check[(dig.check$kmeans==1)&(dig.check$受督導單位=="台灣中油股份有限公司高雄營業處"),]),
+                     nrow(dig.check[(dig.check$kmeans==2)&(dig.check$受督導單位=="台灣中油股份有限公司高雄營業處"),]),
+                     nrow(dig.check[(dig.check$kmeans==3)&(dig.check$受督導單位=="台灣中油股份有限公司高雄營業處"),]),
+                     nrow(dig.check[(dig.check$kmeans==4)&(dig.check$受督導單位=="台灣中油股份有限公司高雄營業處"),]),
+                     nrow(dig.check[(dig.check$kmeans==5)&(dig.check$受督導單位=="台灣中油股份有限公司高雄營業處"),]))
+
+check.kmeans=select(check.kmeans,k,A01,A02,A03,B01,B02,B03,B04,B05,C01,C02,n,power,cht,water,oil)
+names(check.kmeans) = c("群別","施工圍籬","復原範圍","平整度","工程告示","材料放置","交通維持","管線定位","分段開挖","分段紀錄","路燈確認","件數","台電件數","中華電信件數","自來水廠件數","中油件數")
+
+check.kmeans = round(check.kmeans,3)
+
+```
+
+有鑑於道路挖掘施工品質事實上取決於施工者，本府訂定「金門縣道路挖掘埋設管線工程督導實施要點」執行現場督導，引入電腦隨機抽選機制、裁罰標準化、記點制度及獎勵措施等。108年9月1日至109年8月31日間，共累計督導`r nrow(dig.check)`次，累計動員人力`r sum(dig.check$動員人次)`人次，最高單案記點為`r max(dig.check$合計點數)`，尚未達罰款門檻；平均道路平整度為`r round(mean(dig.check$平整度[!is.na(dig.check$平整度)]),2)`㎜，符合±6㎜檢驗標準。
+
+但已取得道路挖掘許可但未如期進場施工者，約佔`r round(nrow(dig.check[dig.check$已開挖=="否",])/nrow(dig.check),4)*100` %。後續以集群分析(k-means)對督導項目結果進行數值分析如下：
+
+```{r 03,echo=F,message=F,warning=F}
+
+kable(check.kmeans)
+
+```
+
+同一群中，單項督導項目的分析值愈高者，代表該群愈常發生該項缺失。
+
+## 受考評單位各項量化指標
+
+依署裁示，至少應提供申報完工百分比、已完成圖資案件百分比、應未符規定受裁罰百分比、案件施工打卡百分比等資料。統計時間截至109年11月20日上午8時，指標列表如下：
+
+## One more things：考評效果
+
+本府以道路挖掘系統之資料，每日由電腦自動傳送概況報告至土木科LINE（群組），報告包含管線圖資更新的申報比例。近日發現圖資更新申報比例明顯提高，因此截取108年7月至109年11月18日之每日管線圖資更新申報比率資料後，繪製折線圖如下：
+
+```{r 04,echo=F,message=F,warning=F}
+
+load(file = "digupdatetimeline.RData")
+
+ggplot(line,aes(x=date,y=ratio))+
+    geom_line(col="blue",size=1.5)+
+    geom_vline(xintercept = as.Date("2020-09-10"),col="red")+
+    geom_point(data=last(line),aes(x=date,y=ratio),col="blue",size=3)+
+    geom_point(data=line[line$date==as.Date("2020-09-10"),],aes(x=date,y=ratio),col="red",size=3)+
+    annotate("text",x=as.Date("2020-09-10")-30,y=25,label="109年9月10日",col="red")+
+    annotate("text",x=last(line$date),y=last(line$ratio)+5,label=paste0(last(line$ratio),"%"),col="blue")+
+    annotate("text",x=as.Date("2020-09-10")-15,y=line$ratio[line$date==as.Date("2020-09-10")]+3,label=paste0(line$ratio[line$date==as.Date("2020-09-10")],"%"),col="red")+
+    ylim(0,100)+
+    scale_x_date(breaks="1 months",date_labels="%Y-%m")+
+    theme(axis.text.x = element_text(angle=45, colour="black"))
+
+```
+
+資料為累計值，範圍為所有單位。可以發現，在109年9月10日發函通知辦理本（109）年度管挖考評後，圖資更新申報比例開始有明顯改進。因此建議次（110）年度持續納入本縣為考評範圍，並納入抽驗既有孔蓋平整度（從公共設施管線資料庫中隨機抽選）。
