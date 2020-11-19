@@ -71,9 +71,9 @@ target.m2<-as.Date("2020-08-31")
 # dig$Purpose = 0
 # for (i in 1:nrow(dig)) {
 #   for (d in 1:length(digpurpose)) {
-#     
+# 
 #     dig$Purpose[i] = ifelse(grepl(digpurpose[d],dig$EngUse[i]),1,dig$Purpose[i])
-#     
+# 
 #   }
 # }
 # 
@@ -103,11 +103,14 @@ target.m2<-as.Date("2020-08-31")
 # eva.dig = arrange(eva.dig,PPName,desc(Area),desc(Length))
 
 #### Just Import Data ####
-
+# dig = dig[!grepl("1911",dig$SchedStart),]
+#save(dig,file ="109Dig_1091124Data0.RData" )
 #save(eva.dig,file = "109Dig_1091124Data.RData")
 #save(dig.check,file = "109Dig_1091124Data2.RData")
 load(file = "109Dig_1091124Data.RData")
+load(file = "109Dig_1091124Data0.RData")
 load(file = "109Dig_1091124Data2.RData")
+
 
 eva.dig$PPName = ifelse(eva.dig$PPName=="金門縣自來水廠生產供水課","金門縣自來水廠",eva.dig$PPName)
 
@@ -132,7 +135,7 @@ eva.dig$PPName = ifelse(eva.dig$PPName=="金門縣自來水廠生產供水課","
   
 相關法令條文如附件，就復原部分依常見問題摘要如下：
 
-1. 道路挖掘復原由申挖單位進行。
+1. 道路挖掘復原由申挖單位進行，**未收取**申請規費及修復費。
 2. 瀝青混凝土路面復原寬度依路寬分類。路寬8公尺以上半路幅復原；路寬未達8公尺者為全路幅復原，但具行車分向線且挖掘範圍未逾車道界線者，得依實際挖掘之車道範圍復原。
 3. 管線圖資更新作業規定於「金門縣道路挖掘管理自治條例」第13條及「金門縣道路挖掘施工維護管理要點」第17點。
 
@@ -156,6 +159,17 @@ bg1.form = filter(bg1.form,grepl("中華電信",PPName)|grepl("電力",PPName)|g
 + 自來水廠：`r bg1.form$ratio[bg1.form$PPName=="金門縣自來水廠"]`% 
 + 中華電信公司：`r bg1.form$ratio[bg1.form$PPName=="中華電信公司金門營運處"]`% 
 + 台灣中油：`r bg1.form$ratio[bg1.form$PPName=="台灣中油股份有限公司高雄營業處"]`% 
+
+在挖掘需求部分，以用戶接管為最高，約佔`r round(nrow(dig[dig$EngType=="家庭用戶申裝管線工程",])/nrow(dig),4)*100`%。以下為申挖需求每月施工件數迴歸圖，除計畫性挖掘為主的「管線工程及人手孔」之外，其餘整體呈現緩緩下降的趨勢。
+
+```{r 01b,echo=F,message=F,warning=F}
+
+summarise(group_by(filter(mutate(dig,date=as.Date(SchedStart)),date<=as.Date("2020-08-31")),format(date,format="%y-%m"),EngType),n=n()) %>% 
+    as.data.frame() %>% 
+    `names<-`(c("date","EngType","n")) %>% na.exclude() %>% 
+    {ggplot(data=.,aes(x=date,y=n,group=EngType,col=EngType))+stat_smooth(size=1.5)+ggtitle("歷年挖掘需求每月件數迴歸圖")+theme(axis.text.x = element_text(angle=45, colour="black"))}
+
+```
 
 ## 道路挖掘督導
 
@@ -214,15 +228,17 @@ kable(check.kmeans)
 
 ```
 
-同一群中，單項督導項目的分析值愈高者，代表該群愈常發生該項缺失。
+同一群中，單項督導項目的分析值愈高者，代表該群愈常發生該項缺失。其中以台電公司金門區處施工管理及品質為最佳。可以發現，絕大多數案件缺失發生頻率低，代表整體道路挖掘施工管理尚可，但有部分例外情況。
 
 ## 受考評單位各項量化指標
 
 依署裁示，至少應提供申報完工百分比、已完成圖資案件百分比、應未符規定受裁罰百分比、案件施工打卡百分比等資料。統計時間截至109年11月20日上午8時，指標列表如下：
 
+<!-- [表格] --> 
+
 ## One more things：考評效果
 
-本府以道路挖掘系統之資料，每日由電腦自動傳送概況報告至土木科LINE（群組），報告包含管線圖資更新的申報比例。近日發現圖資更新申報比例明顯提高，因此截取108年7月至109年11月18日之每日管線圖資更新申報比率資料後，繪製折線圖如下：
+本府以道路挖掘系統之資料，每日由電腦自動彙整並傳送概況報告至土木科LINE（群組）。概況報告包含管線圖資更新的申報比例。近二個月於每日概況報告中發現圖資更新申報比例明顯提高，因此截取108年7月至109年11月18日之每日管線圖資更新申報比率資料後，繪製折線圖如下：
 
 ```{r 04,echo=F,message=F,warning=F}
 
@@ -231,6 +247,7 @@ load(file = "digupdatetimeline.RData")
 ggplot(line,aes(x=date,y=ratio))+
     geom_line(col="blue",size=1.5)+
     geom_vline(xintercept = as.Date("2020-09-10"),col="red")+
+  geom_vline(xintercept = as.Date("2019-10-16"),col="green",linetype=1)+
     geom_point(data=last(line),aes(x=date,y=ratio),col="blue",size=3)+
     geom_point(data=line[line$date==as.Date("2020-09-10"),],aes(x=date,y=ratio),col="red",size=3)+
     annotate("text",x=as.Date("2020-09-10")-30,y=25,label="109年9月10日",col="red")+
@@ -242,4 +259,6 @@ ggplot(line,aes(x=date,y=ratio))+
 
 ```
 
-資料為累計值，範圍為所有單位。可以發現，在109年9月10日發函通知辦理本（109）年度管挖考評後，圖資更新申報比例開始有明顯改進。因此建議次（110）年度持續納入本縣為考評範圍，並納入抽驗既有孔蓋平整度（從公共設施管線資料庫中隨機抽選）。
+資料為累計值，範圍為所有單位。可以發現，在109年9月10日發函通知辦理本（109）年度管挖考評後，圖資更新申報比例開始有明顯改進。
+
+因此建議次（110）年度持續納入本縣為考評範圍，並納入抽驗既有孔蓋平整度（從公共設施管線資料庫中隨機抽選）。
