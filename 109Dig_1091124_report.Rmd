@@ -244,6 +244,8 @@ kable(check.kmeans)
 
 load(file = "digupdatetimeline.RData")
 
+line = rbind(line,data.frame(date=as.Date("2020-11-20"),ratio=33.73))
+
 ggplot(line,aes(x=date,y=ratio))+
     geom_line(col="blue",size=1.5)+
     geom_vline(xintercept = as.Date("2020-09-10"),col="red")+
