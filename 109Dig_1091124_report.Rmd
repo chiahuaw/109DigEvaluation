@@ -114,6 +114,9 @@ load(file = "109Dig_1091124Data2.RData")
 
 eva.dig$PPName = ifelse(eva.dig$PPName=="金門縣自來水廠生產供水課","金門縣自來水廠",eva.dig$PPName)
 
+# summarise(group_by(dig.check,受督導單位,year),件數=n(),平均記點=mean(點數),平均加計=sum(加計點數),已開挖比率=sum(ifelse(已開挖=="是",1,0))) %>% as.data.frame() %>% write.csv(file="digCheckAll.csv",fileEncoding = "UTF-8")
+
+
 ```
 
 ## 前言：讓資料說話
